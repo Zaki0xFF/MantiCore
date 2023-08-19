@@ -1,0 +1,33 @@
+import "fonts/Kameron-Bold.ttf";
+import { Theme } from "theme.slint";
+
+export component ClockWindow inherits Window {
+    in property <int> clock;
+    default-font-family: "Kameron";
+    width: 240px;
+    height: 240px;
+    background: Theme.window-background;
+    Rectangle {
+        z: 0;
+        background: #029dcc;
+        border-radius: 13px;
+        width: 20px;
+        height: 100px;
+        x: 190px;
+    }
+    HorizontalLayout {
+        alignment: center;
+        y: 45px;
+        Text {
+            text: floor(root.clock/3600) + "\n" +floor(root.clock/60);
+            color: Theme.text-color;
+            font-size: 60px;
+        }
+        Text {
+            y: 30px;
+            text: "19\n07";
+            color: Theme.text-color;
+            font-size: 30px;
+        }
+    }
+}

@@ -1,0 +1,55 @@
+import { Theme } from "theme.slint";
+
+export component Card inherits Rectangle {
+    callback clicked <=> touch-area.clicked;
+
+    in property <string> title: "title";
+    in property <bool> is-selected: false;
+    in property <image> image-source <=> image.source;
+    private property <length> spacing: Theme.spacing-medium;
+    private property <length> title-spacing: Theme.spacing-medium;
+    private property <length> title-area-height: Theme.size-small;
+
+    border-radius: Theme.radius-regular;
+    background: Theme.background-regular;
+    width: 180px;
+    height: 40px;
+    clip: false;
+
+    touch-area := TouchArea {}
+
+    image := Image {
+        x: 10px;
+        y: (parent.height - self.height) / 2;
+        width: 13%;
+        colorize: Theme.foreground;
+        animate colorize { duration: Theme.duration-fast; }
+    }
+
+    title-label := Text {
+        font-family: Theme.font-family;
+        font-size: Theme.font-size-medium;
+        font-weight: Theme.font-weight-bold;
+        x: (parent.width - self.width) / 2 + image.width;
+        y: (parent.height - self.height) / 2;
+        text <=> root.title;
+        color: Theme.window-background;
+    }
+
+    states [
+        pressed when touch-area.pressed : {
+            background: Theme.background-pressed;
+            image.colorize: Theme.foreground-pressed;
+        }
+        selected when root.is-selected : {
+            background: Theme.background-selected;
+            image.colorize: Theme.foreground-selected;
+            // width: Theme.size-big;
+            height: 50px;
+        }
+     ]
+
+     animate width { duration: Theme.duration-regular; easing: ease-in; }
+     animate height { duration: Theme.duration-regular; easing: ease-in; }
+     animate background { duration: Theme.duration-fast; }
+}

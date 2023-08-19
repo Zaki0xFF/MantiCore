@@ -1,0 +1,72 @@
+import { Theme } from "theme.slint";
+
+export component Carousel inherits FocusScope {
+    callback move-right();
+    callback move-left();
+    callback move-focus-up();
+
+    in-out property <int> selected-index;
+    in property <length> spacing;
+    in property <length> itemHeight;
+    in property <int> count: 0;
+    private property <length> center-y: (root.height - 70px) / 2;
+    private property <duration> duration: Theme.duration-regular;
+
+    forward-focus: focus-scope;
+    height: Theme.size-big;
+
+    move-right => {
+        root.selected-index = min(root.selected-index + 1, root.count - 1);
+    }
+
+    move-left => {
+        root.selected-index = max(root.selected-index - 1, 0);
+    }
+
+    focus-scope:= FocusScope {
+        key-pressed(event) => {
+            if(event.text == Key.UpArrow) {
+                root.move-focus-up();
+                return accept;
+            }
+
+            if(event.text == Key.RightArrow) {
+                root.move-right();
+                return accept;
+            }
+
+            if(event.text == Key.LeftArrow) {
+                root.move-left();
+                return accept;
+            }
+
+            return accept;
+        }
+    }
+
+    TouchArea {
+        width: parent.width;
+        height: parent.height;
+
+        clicked => {
+            focus-scope.focus()
+        }
+     }
+
+    Rectangle {
+        clip: true;
+        background: transparent;
+
+        Flickable {
+            interactive: false;
+            animate viewport-x { duration: root.duration; easing: ease-in; }
+            viewport-y: root.center-y - root.selected-index * (root.itemHeight + root.spacing);
+
+            VerticalLayout {
+                spacing <=> root.spacing;
+
+                @children
+            }
+        }
+    }
+}
