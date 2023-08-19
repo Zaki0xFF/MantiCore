@@ -11,7 +11,6 @@ use esp_backtrace as _;
 //Embedded hal and graphics
 use embedded_graphics::{pixelcolor::raw::RawU16, prelude::*, primitives::Rectangle};
 use embedded_hal::PwmPin;
-use hal::adc::ADC1;
 use hal::embassy;
 use hal::gpio::{Analog, GpioPin, Input, PullUp};
 use hal::peripherals::SENS;
@@ -131,13 +130,12 @@ async fn ui_scene_loop(
 #[embassy_executor::task]
 async fn adc(sens: SENS, adc_pin: GpioPin<Analog, 35>) {
     let analog = sens.split();
-    let mut adc2_config = AdcConfig::new();
-    let mut pin25: hal::adc::AdcPin<GpioPin<Analog, 35>, ADC1> =
-        adc2_config.enable_pin(adc_pin, Attenuation::Attenuation11dB);
-    let mut adc1 = ADC::<ADC1>::adc(analog.adc1, adc2_config).unwrap();
+    let mut adc_config = AdcConfig::new();
+    let mut pin = adc_config.enable_pin(adc_pin, Attenuation::Attenuation11dB);
+    let mut adc = ADC::adc(analog.adc1, adc_config).unwrap();
     loop {
-        let pin25_value: u32 = nb::block!(adc1.read(&mut pin25)).unwrap();
-        let battery_percentage = (pin25_value - 150) * 100 / (3350 - 150);
+        let adc_value: u32 = nb::block!(adc.read(&mut pin)).unwrap();
+        let battery_percentage = (adc_value - 150) * 100 / (3350 - 150);
         println!("Battery percentage: {}", battery_percentage);
 
         Timer::after(Duration::from_secs(60)).await;
