@@ -20,7 +20,7 @@ jobs:
       with:
         default: true
         ldproxy: false
-        version: "1.66.0"
+        buildtargets: esp32
         
     - name: Build
       run: cargo build --verbose
