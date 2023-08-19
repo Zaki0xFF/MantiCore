@@ -5,28 +5,36 @@
 //Global allocator
 extern crate alloc;
 //use core::time::Duration;
-use alloc::rc::Rc;
 use alloc::boxed::Box;
+use alloc::rc::Rc;
 use esp_backtrace as _;
 //Embedded hal and graphics
+use embedded_graphics::{pixelcolor::raw::RawU16, prelude::*, primitives::Rectangle};
 use embedded_hal::PwmPin;
-use embedded_graphics::{prelude::* ,pixelcolor::raw::RawU16, primitives::Rectangle};
 use hal::adc::ADC1;
 use hal::embassy;
-use hal::gpio::{Input, PullUp, Analog, GpioPin};
+use hal::gpio::{Analog, GpioPin, Input, PullUp};
 use hal::peripherals::SENS;
 // Slint ui
 use slint::platform::software_renderer::MinimalSoftwareWindow;
-use slint::platform::{Platform/*, Key*/};
+use slint::platform::Platform;
 // Display and HAL
 use display_interface_spi::SPIInterfaceNoCS;
-use hal::{clock::ClockControl, peripherals::Peripherals, prelude::*, timer::TimerGroup, Rtc, IO, spi::SpiMode, Delay, adc::{AdcConfig, Attenuation, ADC}};
 use esp_println::println;
+use hal::{
+    adc::{AdcConfig, Attenuation, ADC},
+    clock::ClockControl,
+    peripherals::Peripherals,
+    prelude::*,
+    spi::SpiMode,
+    timer::TimerGroup,
+    Delay, Rtc, IO,
+};
 //Embassy
-use static_cell::StaticCell;
 use embassy_executor::Executor;
-use embassy_time::{Duration, Timer, Ticker};
 use embassy_futures::join::join;
+use embassy_time::{Duration, Ticker, Timer};
+use static_cell::StaticCell;
 
 slint::include_modules!();
 static EXECUTOR: StaticCell<Executor> = StaticCell::new();
@@ -48,29 +56,32 @@ struct MyPlatform<'d> {
     // ... maybe more devices
 }
 impl<'d> Platform for MyPlatform<'d> {
-    fn create_window_adapter(&self) -> Result<Rc<dyn slint::platform::WindowAdapter>, slint::PlatformError> {
+    fn create_window_adapter(
+        &self,
+    ) -> Result<Rc<dyn slint::platform::WindowAdapter>, slint::PlatformError> {
         // Since on MCUs, there can be only one window, just return a clone of self.window.
         // We'll also use the same window in the event loop.
         Ok(self.window.clone())
     }
-    fn duration_since_start(&self) -> core::time::Duration {
-        core::time::Duration::from_millis(self.rtc.get_time_ms())
-    }
     // optional: You can put the event loop there, or in the main function, see later
     fn run_event_loop(&self) -> Result<(), slint::PlatformError> {
         todo!();
+    }
+    fn duration_since_start(&self) -> core::time::Duration {
+        core::time::Duration::from_millis(self.rtc.get_time_ms())
     }
 }
 
 #[global_allocator]
 static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
 
-struct DisplayWrapper<'a, T>{
+struct DisplayWrapper<'a, T> {
     display: &'a mut T,
     line_buffer: &'a mut [slint::platform::software_renderer::Rgb565Pixel],
 }
 
-impl<T: DrawTarget<Color = embedded_graphics::pixelcolor::Rgb565>> slint::platform::software_renderer::LineBufferProvider for DisplayWrapper<'_, T>
+impl<T: DrawTarget<Color = embedded_graphics::pixelcolor::Rgb565>>
+    slint::platform::software_renderer::LineBufferProvider for DisplayWrapper<'_, T>
 {
     type TargetPixel = slint::platform::software_renderer::Rgb565Pixel;
     fn process_line(
@@ -83,19 +94,33 @@ impl<T: DrawTarget<Color = embedded_graphics::pixelcolor::Rgb565>> slint::platfo
         render_fn(&mut self.line_buffer[range.clone()]);
 
         // Send the line to the screen using DrawTarget::fill_contiguous
-        self.display.fill_contiguous(
-            &Rectangle::new(Point::new(range.start as _, line as _), Size::new(range.len() as _, 1)),
-            self.line_buffer[range.clone()].iter().map(|p| RawU16::new(p.0).into())
-        ).map_err(drop).unwrap();
+        self.display
+            .fill_contiguous(
+                &Rectangle::new(
+                    Point::new(range.start as _, line as _),
+                    Size::new(range.len() as _, 1),
+                ),
+                self.line_buffer[range.clone()]
+                    .iter()
+                    .map(|p| RawU16::new(p.0).into()),
+            )
+            .map_err(drop)
+            .unwrap();
     }
 }
 
-type RgbDisplay = impl DrawTarget<Color=embedded_graphics::pixelcolor::Rgb565> + 'static;
+type RgbDisplay = impl DrawTarget<Color = embedded_graphics::pixelcolor::Rgb565> + 'static;
 
 #[embassy_executor::task]
-async fn ui_scene_loop(mut next_btn: GpioPin<Input<PullUp>, 5>,mut back_btn: GpioPin<Input<PullUp>, 15>) {
+async fn ui_scene_loop(
+    mut next_btn: GpioPin<Input<PullUp>, 5>,
+    mut back_btn: GpioPin<Input<PullUp>, 15>,
+) {
     loop {
-        join(next_btn.wait_for_low(), back_btn.wait_for_low()).await.0.ok();
+        join(next_btn.wait_for_low(), back_btn.wait_for_low())
+            .await
+            .0
+            .ok();
         if next_btn.is_low().unwrap() && back_btn.is_low().unwrap() {
             println!("clicked");
         }
@@ -104,32 +129,33 @@ async fn ui_scene_loop(mut next_btn: GpioPin<Input<PullUp>, 5>,mut back_btn: Gpi
 }
 
 #[embassy_executor::task]
-async fn adc(sens: SENS, adc_pin: GpioPin<Analog, 35>){
+async fn adc(sens: SENS, adc_pin: GpioPin<Analog, 35>) {
     let analog = sens.split();
     let mut adc2_config = AdcConfig::new();
-    let mut pin25: hal::adc::AdcPin<GpioPin<Analog, 35>, ADC1> = adc2_config.enable_pin(adc_pin, Attenuation::Attenuation11dB);
+    let mut pin25: hal::adc::AdcPin<GpioPin<Analog, 35>, ADC1> =
+        adc2_config.enable_pin(adc_pin, Attenuation::Attenuation11dB);
     let mut adc1 = ADC::<ADC1>::adc(analog.adc1, adc2_config).unwrap();
-    loop{
+    loop {
         let pin25_value: u32 = nb::block!(adc1.read(&mut pin25)).unwrap();
         let battery_percentage = (pin25_value - 150) * 100 / (3350 - 150);
         println!("Battery percentage: {}", battery_percentage);
-    
+
         Timer::after(Duration::from_secs(60)).await;
     }
 }
 
 #[embassy_executor::task]
 async fn ui_update_loop(window: alloc::rc::Rc<MinimalSoftwareWindow>, mut display: RgbDisplay) {
-    loop{
+    loop {
         // Let Slint run the timer hooks and update animations.
         slint::platform::update_timers_and_animations();
-            
+
         //Draw the scene if something needs to be drawn.
         window.draw_if_needed(|renderer| {
             let mut line_buffer = [slint::platform::software_renderer::Rgb565Pixel(0); 240];
-            renderer.render_by_line(DisplayWrapper{
+            renderer.render_by_line(DisplayWrapper {
                 display: &mut display,
-                line_buffer: &mut line_buffer
+                line_buffer: &mut line_buffer,
             });
         });
 
@@ -186,8 +212,8 @@ fn main() -> ! {
     let next_btn = io.pins.gpio5.into_pull_up_input();
     let back_btn = io.pins.gpio15.into_pull_up_input();
     let adc_pin = io.pins.gpio35.into_analog();
-    //let accept_btn = io.pins.gpio22.into_pull_up_input();    
-    
+    //let accept_btn = io.pins.gpio22.into_pull_up_input();
+
     //Initialize SPI
     let spi = hal::spi::Spi::new_no_cs_no_miso(
         peripherals.SPI2,
@@ -198,7 +224,7 @@ fn main() -> ! {
         &mut system.peripheral_clock_control,
         &mut clocks,
     );
-    
+
     let spi_interface = SPIInterfaceNoCS::new(spi, dc_pin);
     // Create display driver
     let mut display = gc9a01a::GC9A01A::new(spi_interface, rst_pin, Channel);
@@ -210,16 +236,17 @@ fn main() -> ! {
     let window = MinimalSoftwareWindow::new(Default::default());
     slint::platform::set_platform(Box::new(MyPlatform {
         window: window.clone(),
-        rtc: rtc
-    })).unwrap();
-    
+        rtc: rtc,
+    }))
+    .unwrap();
+
     // Setup the UI.
     let ui = MainWindow::new().unwrap();
     window.set_size(slint::PhysicalSize::new(240, 240));
 
     #[cfg(feature = "embassy-time-timg0")]
     embassy::init(&clocks, timer_group0.timer0);
-    
+
     // Async requires the GPIO interrupt to wake futures
     hal::interrupt::enable(
         hal::peripherals::Interrupt::GPIO,
@@ -228,7 +255,7 @@ fn main() -> ! {
     .unwrap();
 
     let executor = EXECUTOR.init(Executor::new());
-    executor.run(|spawner|{
+    executor.run(|spawner| {
         spawner.spawn(ui_scene_loop(next_btn, back_btn)).ok();
         spawner.spawn(ui_update_loop(window, display)).ok();
         spawner.spawn(clock_ticker(ui)).ok();
