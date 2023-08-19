@@ -164,10 +164,8 @@ async fn ui_update_loop(window: alloc::rc::Rc<MinimalSoftwareWindow>, mut displa
 #[embassy_executor::task]
 async fn clock_ticker(ui: MainWindow) {
     let mut ticker = Ticker::every(Duration::from_secs(1));
-    let ui_weak = ui.as_weak();
     loop {
-        let ui = ui_weak.upgrade().unwrap();
-        let mut clock = ui.as_weak().upgrade().unwrap().get_clock();
+        let mut clock = ui.get_clock();
         clock += 1;
         ui.set_clock(clock);
         //println!("Secs:{}", clock);
