@@ -18,7 +18,7 @@ jobs:
     - uses: actions/checkout@v3
     - uses: esp-rs/xtensa-toolchain@v1.5
       with:
-        defaut: true
+        default: true
         ldproxy: false
     - name: Build
       run: cargo build --verbose
