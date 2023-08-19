@@ -63,12 +63,12 @@ impl<'d> Platform for MyPlatform<'d> {
         // We'll also use the same window in the event loop.
         Ok(self.window.clone())
     }
-    fn duration_since_start(&self) -> core::time::Duration {
-        core::time::Duration::from_millis(self.rtc.get_time_ms())
-    }
     // optional: You can put the event loop there, or in the main function, see later
     fn run_event_loop(&self) -> Result<(), slint::PlatformError> {
         todo!();
+    }
+    fn duration_since_start(&self) -> core::time::Duration {
+        core::time::Duration::from_millis(self.rtc.get_time_ms())
     }
 }
 
