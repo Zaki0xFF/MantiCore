@@ -8,12 +8,27 @@ import { AppSelection } from "selector.slint";
 export component MainWindow inherits Window {
     width: 240px;
     height: 240px;
-    background: #181818;
-    in property <bool> is_main_menu_open;
+    background: Theme.window-background;
     in property <int> clock;
-    
-    if(is_main_menu_open == false) : ClockWindow{clock: clock;}
-    if(is_main_menu_open == true) : FocusScope{
-        AppSelection {}
+
+    public function set-menu(is_open: bool) {
+        if (is_open) {
+            apps.visible = true;
+            clockWindow.visible = false;
+            apps.focus();
+        } else {
+            clockWindow.visible = true;
+            apps.visible = false;
+            clockWindow.focus();
+        }
+    }
+
+    clockWindow := ClockWindow {
+        visible: false;
+        clock: clock;
+    }
+
+    apps := AppSelection {
+        visible: false;
     }
 }

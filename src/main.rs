@@ -114,14 +114,18 @@ type RgbDisplay = impl DrawTarget<Color = embedded_graphics::pixelcolor::Rgb565>
 async fn ui_scene_loop(
     mut next_btn: GpioPin<Input<PullUp>, 5>,
     mut back_btn: GpioPin<Input<PullUp>, 15>,
-    window: alloc::rc::Rc<MinimalSoftwareWindow>
+    window: alloc::rc::Rc<MinimalSoftwareWindow>,
+    ui: Rc<MainWindow>
 ) {
+    let mut is_open = false;
     loop {
         select(next_btn.wait_for_low(), back_btn.wait_for_low()).await;
         let next_low = next_btn.is_low().unwrap();
         let back_low = back_btn.is_low().unwrap();
 
         if next_low&&back_low{
+            is_open = !is_open;
+            ui.invoke_set_menu(is_open);
             println!("clicked both");
         }else if next_low{
             println!("clicked nexts");
@@ -170,9 +174,8 @@ async fn ui_update_loop(window: alloc::rc::Rc<MinimalSoftwareWindow>, mut displa
 }
 
 #[embassy_executor::task]
-async fn clock_ticker(ui: MainWindow) {
+async fn clock_ticker(ui: Rc<MainWindow>) {
     let mut ticker = Ticker::every(Duration::from_secs(1));
-    ui.set_is_main_menu_open(true);
     loop {
         ui.set_clock(ui.get_clock() + 1);
         //println!("Secs:{}", clock);
@@ -244,8 +247,9 @@ fn main() -> ! {
     .unwrap();
 
     // Setup the UI.
-    let ui = MainWindow::new().unwrap();
+    let ui = Rc::new(MainWindow::new().unwrap());
     window.set_size(slint::PhysicalSize::new(240, 240));
+    ui.invoke_set_menu(false);
 
     #[cfg(feature = "embassy-time-timg0")]
     embassy::init(&clocks, timer_group0.timer0);
@@ -259,7 +263,7 @@ fn main() -> ! {
 
     let executor = EXECUTOR.init(Executor::new());
     executor.run(|spawner| {
-        spawner.spawn(ui_scene_loop(next_btn, back_btn, window.clone())).ok();
+        spawner.spawn(ui_scene_loop(next_btn, back_btn, window.clone(), ui.clone())).ok();
         spawner.spawn(ui_update_loop(window, display)).ok();
         spawner.spawn(clock_ticker(ui)).ok();
         spawner.spawn(adc(peripherals.SENS, adc_pin)).ok();

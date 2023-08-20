@@ -1,12 +1,10 @@
 import "fonts/Kameron-Bold.ttf";
 import { Theme } from "theme.slint";
 
-export component ClockWindow inherits Window {
+export component ClockWindow inherits FocusScope {
     in property <int> clock;
-    default-font-family: "Kameron";
     width: 240px;
     height: 240px;
-    background: Theme.window-background;
     Rectangle {
         z: 0;
         background: #029dcc;

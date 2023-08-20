@@ -5,7 +5,7 @@ import { Carousel } from "carousel.slint";
 import { Card } from "card.slint";
 import { Theme } from "theme.slint";
 
-export component AppSelection inherits Window {
+export component AppSelection inherits FocusScope {
     private property<[{ title: string, image: image}]> navigation-items: [
         { title: "Home", image: @image-url("svg/home_black.svg") },
         { title: "Settings", image: @image-url("svg/settings_black.svg") },
@@ -15,13 +15,10 @@ export component AppSelection inherits Window {
     ];
     property <int> selected-index: 2;
     in property <KeyEvent> event;
-    title: "Carousel example";
     width: 240px;
     height: 240px;
-    background: Theme.window-background;
     padding: Theme.spacing-regular;
     forward-focus: carousel;
-    default-font-family: Theme.font-family;
 
     carousel := Carousel {
         y: (root.width - self.width) / 2;
