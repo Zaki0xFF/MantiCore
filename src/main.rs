@@ -16,7 +16,7 @@ use hal::gpio::{Analog, GpioPin, Input, PullUp};
 use hal::peripherals::SENS;
 // Slint ui
 use slint::platform::software_renderer::MinimalSoftwareWindow;
-use slint::platform::Platform;
+use slint::platform::{Platform, Key};
 // Display and HAL
 use display_interface_spi::SPIInterfaceNoCS;
 use esp_println::println;
@@ -31,7 +31,7 @@ use hal::{
 };
 //Embassy
 use embassy_executor::Executor;
-use embassy_futures::join::join;
+use embassy_futures::select::select;
 use embassy_time::{Duration, Ticker, Timer};
 use static_cell::StaticCell;
 
@@ -114,15 +114,23 @@ type RgbDisplay = impl DrawTarget<Color = embedded_graphics::pixelcolor::Rgb565>
 async fn ui_scene_loop(
     mut next_btn: GpioPin<Input<PullUp>, 5>,
     mut back_btn: GpioPin<Input<PullUp>, 15>,
+    window: alloc::rc::Rc<MinimalSoftwareWindow>
 ) {
     loop {
-        join(next_btn.wait_for_low(), back_btn.wait_for_low())
-            .await
-            .0
-            .ok();
-        if next_btn.is_low().unwrap() && back_btn.is_low().unwrap() {
-            println!("clicked");
+        select(next_btn.wait_for_low(), back_btn.wait_for_low()).await;
+        let next_low = next_btn.is_low().unwrap();
+        let back_low = back_btn.is_low().unwrap();
+
+        if next_low&&back_low{
+            println!("clicked both");
+        }else if next_low{
+            println!("clicked nexts");
+            window.dispatch_event(slint::platform::WindowEvent::KeyPressed { text: Key::RightArrow.into() });
+        }else if back_low{
+            println!("clicked back");
+            window.dispatch_event(slint::platform::WindowEvent::KeyPressed { text: Key::LeftArrow.into() });
         }
+
         Timer::after(Duration::from_millis(300)).await;
     }
 }
@@ -164,6 +172,7 @@ async fn ui_update_loop(window: alloc::rc::Rc<MinimalSoftwareWindow>, mut displa
 #[embassy_executor::task]
 async fn clock_ticker(ui: MainWindow) {
     let mut ticker = Ticker::every(Duration::from_secs(1));
+    ui.set_is_main_menu_open(true);
     loop {
         ui.set_clock(ui.get_clock() + 1);
         //println!("Secs:{}", clock);
@@ -250,7 +259,7 @@ fn main() -> ! {
 
     let executor = EXECUTOR.init(Executor::new());
     executor.run(|spawner| {
-        spawner.spawn(ui_scene_loop(next_btn, back_btn)).ok();
+        spawner.spawn(ui_scene_loop(next_btn, back_btn, window.clone())).ok();
         spawner.spawn(ui_update_loop(window, display)).ok();
         spawner.spawn(clock_ticker(ui)).ok();
         spawner.spawn(adc(peripherals.SENS, adc_pin)).ok();
