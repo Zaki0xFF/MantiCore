@@ -13,5 +13,7 @@ export component MainWindow inherits Window {
     in property <int> clock;
     
     if(is_main_menu_open == false) : ClockWindow{clock: clock;}
-    if(is_main_menu_open == true) : AppSelection{}
+    if(is_main_menu_open == true) : FocusScope{
+        AppSelection {}
+    }
 }
