@@ -2,7 +2,7 @@
     MantiCore
 </h1>
 
-<p align="center>
+<p align="center">
 Empowers to run free as in freedom software on easy to access hardware components
 </p>
 <br>
