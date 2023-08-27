@@ -1,7 +1,4 @@
-<p align="center">
 [![Rust](https://github.com/Zaki0xFF/MantiCore/actions/workflows/rust.yml/badge.svg)](https://github.com/Zaki0xFF/MantiCore/actions/workflows/rust.yml)
-
-</p>
 
 <h1 align="center">
 MantiCore
