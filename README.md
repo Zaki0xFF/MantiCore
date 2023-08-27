@@ -1,9 +1,11 @@
-[![Rust](https://github.com/Zaki0xFF/MantiCore/actions/workflows/rust.yml/badge.svg)](https://github.com/Zaki0xFF/MantiCore/actions/workflows/rust.yml)
-
 <h1 align="center">
 MantiCore
 </h1>
-
+<p align="center">
+  <a href="https://github.com/Zaki0xFF/MantiCore/actions/workflows/rust.yml">
+    <img src="https://github.com/Zaki0xFF/MantiCore/actions/workflows/rust.yml/badge.svg">
+  </a>
+</p>
 <p align="center">
 Empowers to run free as in freedom software on easy to access hardware components
 </p>
