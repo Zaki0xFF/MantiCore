@@ -11,6 +11,11 @@ Empowers to run free as in freedom software on easy to access hardware component
 </p>
 <br>
 
+## Table of Contents
+- [Description](#description)
+- [Contribute](#contribute)
+- [License](#license)
+
 ## Description
 MantiCore aims to be small, performant and hackable software that allows you to build your own smart wearable.
 
