@@ -21,6 +21,7 @@ jobs:
         default: true
         ldproxy: false
         buildtargets: esp32
+        version: 1.71.0.0
     - uses: Swatinem/rust-cache@v1
     - name: Build
       run: cargo build --verbose
