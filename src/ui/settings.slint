@@ -1,0 +1,93 @@
+import { Button } from "std-widgets.slint";
+
+export component Recipe inherits Window {
+    width: 240px;
+    height: 240px;
+    in-out property <int> active-tab;
+
+    function handleCollapsable() {
+        if (wifiButton.checked) 
+        {
+            wifiSettings.visible = true;
+            wifiSettings.width= 240px;
+            wifiSettings.height = 50px;
+        }
+        else{
+            wifiSettings.visible = false;
+            wifiSettings.width= 0px;
+            wifiSettings.height = 0px;
+        }
+
+        if (btButton.checked) 
+        {
+            btSettings.visible = true;
+            btSettings.width= 240px;
+            btSettings.height = 50px;
+        }
+        else{
+            btSettings.visible = false;
+            btSettings.width= 0px;
+            btSettings.height = 0px;
+        } 
+
+        if (clockButton.checked) 
+        {
+            clockSettings.visible = true;
+            clockSettings.width= 240px;
+            clockSettings.height = 50px;
+        }
+        else{
+            clockSettings.visible = false;
+            clockSettings.width= 0px;
+            clockSettings.height = 0px;
+        } 
+    }
+
+    VerticalLayout {
+        alignment: center;
+        collapsables := VerticalLayout {
+            spacing: 3px;
+            wifiButton:= Button {
+                height: 45px;
+                text: "Wifi";
+                checkable: true;
+                clicked => { handleCollapsable() }
+            }
+            wifiSettings:= Rectangle {
+                background: red;
+                visible: false;            
+                width: 0;
+                height: 0;
+            }
+
+
+            btButton:= Button {
+                height: 45px;
+                text: "Bluetooth";
+                checkable: true;
+                clicked => { handleCollapsable() }
+            }
+            btSettings:= Rectangle {
+                background: green;
+                visible: false;    
+                width: 0;
+                height: 0;      
+            }
+
+
+            clockButton:= Button {
+                height: 45px;
+                text: "Clock";
+                checkable: true;
+                clicked => { handleCollapsable() }
+            }
+            clockSettings:= Rectangle {
+                background: blue;
+                visible: false;
+                width: 0;
+                height: 0;          
+            }
+        }
+        
+    }
+}
