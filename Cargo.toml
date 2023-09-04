@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 build = "src/build.rs"
 
 [dependencies]
-hal = { package = "esp32-hal", version = "0.13.0", features = ["embassy", "embassy-time", "embassy-time-timg0", "async"]}
+hal = { package = "esp32-hal", version = "0.14.0", features = ["embassy", "embassy-time", "embassy-time-timg0", "async"]}
 esp-backtrace = { version = "0.7.0", features = ["esp32", "panic-handler", "exception-handler", "print-uart"] }
 esp-println = { version = "0.5.0", features = ["esp32"] }
 gc9a01a = "0.1.1"
@@ -22,12 +22,12 @@ embassy-time = "*"
 embassy-futures = "0.1.0"
 
 [dependencies.slint]
-version = "1.1.0"
+version = "1.2.0"
 default-features = false
 features = ["compat-1-0", "unsafe-single-threaded", "libm"]
 
 [build-dependencies]
-slint-build = "1.1.0"
+slint-build = "1.2.0"
 
 [features]
 default = ["embassy-time-timg0"]
