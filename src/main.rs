@@ -140,16 +140,19 @@ async fn ui_scene_loop(
 }
 
 #[embassy_executor::task]
-async fn adc(sens: SENS, adc_pin: GpioPin<Analog, 35>) {
+async fn adc(sens: SENS, adc_pin: GpioPin<Analog, 35>, ui: Rc<MainWindow>) {
     let analog = sens.split();
     let mut adc_config = AdcConfig::new();
     let mut pin = adc_config.enable_pin(adc_pin, Attenuation::Attenuation11dB);
     let mut adc = ADC::adc(analog.adc1, adc_config).unwrap();
     loop {
         let adc_value: u32 = nb::block!(adc.read(&mut pin)).unwrap();
-        let battery_percentage = (adc_value - 150) * 100 / (3350 - 150);
-        println!("Battery percentage: {}", battery_percentage);
-
+        let mut battery_percentage: u32 = (adc_value - 150) * 100 / (3350 - 150);
+        if battery_percentage > 100 {
+            println!("Battery not connected");
+            battery_percentage = 0;
+        }
+        ui.set_battery(battery_percentage.try_into().unwrap());
         Timer::after(Duration::from_secs(60)).await;
     }
 }
@@ -265,8 +268,8 @@ fn main() -> ! {
     executor.run(|spawner| {
         spawner.spawn(ui_scene_loop(next_btn, back_btn, window.clone(), ui.clone())).ok();
         spawner.spawn(ui_update_loop(window, display)).ok();
+        spawner.spawn(adc(peripherals.SENS, adc_pin, ui.clone())).ok();
         spawner.spawn(clock_ticker(ui)).ok();
-        spawner.spawn(adc(peripherals.SENS, adc_pin)).ok();
     });
 }
 

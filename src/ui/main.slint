@@ -10,6 +10,7 @@ export component MainWindow inherits Window {
     height: 240px;
     background: Theme.window-background;
     in property <int> clock;
+    in property <int> battery;
 
     public function set-menu(is_open: bool) {
         if (is_open) {
@@ -26,6 +27,7 @@ export component MainWindow inherits Window {
     clockWindow := ClockWindow {
         visible: false;
         clock: clock;
+        battery: battery;
     }
 
     apps := AppSelection {
