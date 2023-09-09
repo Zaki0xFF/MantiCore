@@ -19,9 +19,9 @@ export component Card inherits Rectangle {
     touch-area := TouchArea {}
 
     image := Image {
-        x: 10px;
+        x: 17px;
         y: (parent.height - self.height) / 2;
-        width: 13%;
+        width: 18%;
         colorize: Theme.foreground;
         animate colorize { duration: Theme.duration-fast; }
     }
@@ -44,7 +44,6 @@ export component Card inherits Rectangle {
         selected when root.is-selected : {
             background: Theme.background-selected;
             image.colorize: Theme.foreground-selected;
-            // width: Theme.size-big;
             height: 50px;
         }
      ]
