@@ -11,6 +11,7 @@ use esp_backtrace as _;
 //Embedded hal and graphics
 use embedded_graphics::{pixelcolor::raw::RawU16, prelude::*, primitives::Rectangle};
 use embedded_hal::PwmPin;
+use gc9a01a::GC9A01A;
 use hal::embassy;
 use hal::gpio::{Analog, GpioPin, Input, PullUp};
 use hal::peripherals::SENS;
@@ -108,7 +109,31 @@ impl<T: DrawTarget<Color = embedded_graphics::pixelcolor::Rgb565>>
     }
 }
 
-type RgbDisplay = impl DrawTarget<Color = embedded_graphics::pixelcolor::Rgb565> + 'static;
+type RgbDisplay = GC9A01A<
+    SPIInterfaceNoCS<
+        hal::Spi<'static, hal::peripherals::SPI2, hal::spi::FullDuplexMode>,
+        GpioPin<hal::gpio::Output<hal::gpio::PushPull>, 16>
+    >,
+    GpioPin<hal::gpio::Output<hal::gpio::PushPull>, 4>, Channel>;
+
+#[embassy_executor::task]
+async fn ui_update_loop(window: alloc::rc::Rc<MinimalSoftwareWindow>, mut display: RgbDisplay) {
+    loop {
+        // Let Slint run the timer hooks and update animations.
+        slint::platform::update_timers_and_animations();
+
+        //Draw the scene if something needs to be drawn.
+        window.draw_if_needed(|renderer| {
+            let mut line_buffer = [slint::platform::software_renderer::Rgb565Pixel(0); 240];
+            renderer.render_by_line(DisplayWrapper {
+                display: &mut display,
+                line_buffer: &mut line_buffer,
+            });
+        });
+
+        Timer::after(Duration::from_millis(500)).await;
+    }
+}
 
 #[embassy_executor::task]
 async fn ui_scene_loop(
@@ -157,24 +182,7 @@ async fn adc(sens: SENS, adc_pin: GpioPin<Analog, 35>, ui: Rc<MainWindow>) {
     }
 }
 
-#[embassy_executor::task]
-async fn ui_update_loop(window: alloc::rc::Rc<MinimalSoftwareWindow>, mut display: RgbDisplay) {
-    loop {
-        // Let Slint run the timer hooks and update animations.
-        slint::platform::update_timers_and_animations();
 
-        //Draw the scene if something needs to be drawn.
-        window.draw_if_needed(|renderer| {
-            let mut line_buffer = [slint::platform::software_renderer::Rgb565Pixel(0); 240];
-            renderer.render_by_line(DisplayWrapper {
-                display: &mut display,
-                line_buffer: &mut line_buffer,
-            });
-        });
-
-        Timer::after(Duration::from_millis(500)).await;
-    }
-}
 
 #[embassy_executor::task]
 async fn clock_ticker(ui: Rc<MainWindow>) {
