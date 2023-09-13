@@ -260,7 +260,7 @@ fn main() -> ! {
     // Setup the UI.
     let ui = Rc::new(MainWindow::new().unwrap());
     window.set_size(slint::PhysicalSize::new(240, 240));
-    ui.invoke_set_menu(false);
+    //ui.invoke_set_menu(false);
 
     #[cfg(feature = "embassy-time-timg0")]
     embassy::init(&clocks, timer_group0.timer0);
@@ -282,7 +282,7 @@ fn main() -> ! {
 }
 
 fn init_heap() {
-    const HEAP_SIZE: usize = 32 * 1024;
+    const HEAP_SIZE: usize = 32 * 2048;
 
     extern "C" {
         static mut _heap_start: u32;
