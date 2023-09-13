@@ -282,7 +282,7 @@ fn main() -> ! {
 }
 
 fn init_heap() {
-    const HEAP_SIZE: usize = 32 * 1024;
+    const HEAP_SIZE: usize = 32 * 2048;
 
     extern "C" {
         static mut _heap_start: u32;
