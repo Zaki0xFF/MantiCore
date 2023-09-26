@@ -11,7 +11,7 @@ export component Card inherits Rectangle {
     private property <length> title-area-height: Theme.size-small;
 
     border-radius: Theme.radius-regular;
-    background: Theme.background-regular;
+    background: Theme.secondary;
     width: 180px;
     height: 40px;
     clip: false;
@@ -33,17 +33,17 @@ export component Card inherits Rectangle {
         x: (parent.width - self.width) / 2 + image.width;
         y: (parent.height - self.height) / 2;
         text <=> root.title;
-        color: Theme.window-background;
+        color: Theme.text-color;
     }
 
     states [
         pressed when touch-area.pressed : {
-            background: Theme.background-pressed;
-            image.colorize: Theme.foreground-pressed;
+            background: Theme.foreground;
+            image.colorize: Theme.accent;
         }
         selected when root.is-selected : {
-            background: Theme.background-selected;
-            image.colorize: Theme.foreground-selected;
+            background: Theme.foreground;
+            image.colorize: Theme.accent;
             height: 50px;
         }
      ]
