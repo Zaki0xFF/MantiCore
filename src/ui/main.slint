@@ -1,4 +1,3 @@
-import "fonts/Kameron-Bold.ttf";
 import { ClockWindow } from "clock.slint";
 import { Theme } from "theme.slint";
 import { AppSelection } from "selector.slint";
@@ -7,7 +6,7 @@ import { Settings } from "settings.slint";
 export component MainWindow inherits Window {
     width: 240px;
     height: 240px;
-    background: Theme.window-background;
+    background: Theme.background;
     in property <int> clock;
     in property <int> battery;
 
@@ -31,5 +30,9 @@ export component MainWindow inherits Window {
 
     apps := AppSelection {
         visible: false;
+    }
+
+    settings := Settings{
+        
     }
 }
