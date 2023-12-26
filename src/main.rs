@@ -21,7 +21,7 @@ use slint::platform::software_renderer::MinimalSoftwareWindow;
 use slint::platform::{Platform, Key};
 // Display and HAL
 use display_interface_spi::SPIInterfaceNoCS;
-use embassy_executor::{Spawner, task};
+use embassy_executor::Spawner;
 use esp_println::println;
 use hal::{
     adc::{AdcConfig, Attenuation, ADC},
@@ -277,19 +277,9 @@ async fn main(spawner: Spawner) {
 
 fn init_heap() {
     const HEAP_SIZE: usize = 32 * 2048;
-
-    extern "C" {
-        static mut _heap_start: u32;
-        static mut _heap_end: u32;
-    }
+    static mut HEAP: core::mem::MaybeUninit<[u8; HEAP_SIZE]> = core::mem::MaybeUninit::uninit();
 
     unsafe {
-        let heap_start = &_heap_start as *const _ as usize;
-        let heap_end = &_heap_end as *const _ as usize;
-        assert!(
-            heap_end - heap_start > HEAP_SIZE,
-            "Not enough available heap memory."
-        );
-        ALLOCATOR.init(heap_start as *mut u8, HEAP_SIZE);
+        ALLOCATOR.init(HEAP.as_mut_ptr().cast(), HEAP_SIZE);
     }
 }
