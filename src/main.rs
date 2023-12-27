@@ -11,6 +11,7 @@ use esp_backtrace as _;
 //Embedded hal and graphics
 use embedded_graphics::{pixelcolor::raw::RawU16, prelude::*, primitives::Rectangle};
 use embedded_hal::PwmPin;
+use embedded_hal_async::digital::Wait;
 use gc9a01a::GC9A01A;
 use hal::embassy;
 use hal::gpio::{Analog, GpioPin, Input, PullUp};
@@ -20,6 +21,7 @@ use slint::platform::software_renderer::MinimalSoftwareWindow;
 use slint::platform::{Platform, Key};
 // Display and HAL
 use display_interface_spi::SPIInterfaceNoCS;
+use embassy_executor::Spawner;
 use esp_println::println;
 use hal::{
     adc::{AdcConfig, Attenuation, ADC},
@@ -31,13 +33,10 @@ use hal::{
     Delay, Rtc, IO,
 };
 //Embassy
-use embassy_executor::Executor;
 use embassy_futures::select::select;
 use embassy_time::{Duration, Ticker, Timer};
-use static_cell::StaticCell;
 
 slint::include_modules!();
-static EXECUTOR: StaticCell<Executor> = StaticCell::new();
 
 struct Channel;
 impl PwmPin for Channel {
@@ -111,7 +110,7 @@ impl<T: DrawTarget<Color = embedded_graphics::pixelcolor::Rgb565>>
 
 type RgbDisplay = GC9A01A<
     SPIInterfaceNoCS<
-        hal::Spi<'static, hal::peripherals::SPI2, hal::spi::FullDuplexMode>,
+        hal::spi::master::Spi<'static, hal::peripherals::SPI2, hal::spi::FullDuplexMode>,
         GpioPin<hal::gpio::Output<hal::gpio::PushPull>, 16>
     >,
     GpioPin<hal::gpio::Output<hal::gpio::PushPull>, 4>, Channel>;
@@ -171,7 +170,7 @@ async fn adc(sens: SENS, adc_pin: GpioPin<Analog, 35>, ui: Rc<MainWindow>) {
     let mut pin = adc_config.enable_pin(adc_pin, Attenuation::Attenuation11dB);
     let mut adc = ADC::adc(analog.adc1, adc_config).unwrap();
     loop {
-        let adc_value: u32 = nb::block!(adc.read(&mut pin)).unwrap();
+        let adc_value: u32 = nb::block!(adc.read(&mut pin)).unwrap() as u32;
         let mut battery_percentage: u32 = (adc_value - 150) * 100 / (3350 - 150);
         if battery_percentage > 100 {
             println!("Battery not connected");
@@ -181,8 +180,6 @@ async fn adc(sens: SENS, adc_pin: GpioPin<Analog, 35>, ui: Rc<MainWindow>) {
         Timer::after(Duration::from_secs(60)).await;
     }
 }
-
-
 
 #[embassy_executor::task]
 async fn clock_ticker(ui: Rc<MainWindow>) {
@@ -194,24 +191,22 @@ async fn clock_ticker(ui: Rc<MainWindow>) {
     }
 }
 
-#[entry]
-fn main() -> ! {
+#[main]
+async fn main(spawner: Spawner) {
     let peripherals = Peripherals::take();
-    let mut system = peripherals.DPORT.split();
+    let system = peripherals.SYSTEM.split();
     let mut clocks = ClockControl::boot_defaults(system.clock_control).freeze();
     let mut delay = Delay::new(&clocks);
     // Disable the RTC and TIMG watchdog timers
     let mut rtc = Rtc::new(peripherals.RTC_CNTL);
     let mut timer_group0 = TimerGroup::new(
         peripherals.TIMG0,
-        &clocks,
-        &mut system.peripheral_clock_control,
+        &clocks
     );
     let mut wdt0 = timer_group0.wdt;
     let timer_group1 = TimerGroup::new(
         peripherals.TIMG1,
-        &clocks,
-        &mut system.peripheral_clock_control,
+        &clocks
     );
     let mut wdt1 = timer_group1.wdt;
     rtc.rwdt.disable();
@@ -232,15 +227,12 @@ fn main() -> ! {
     //let accept_btn = io.pins.gpio22.into_pull_up_input();
 
     //Initialize SPI
-    let spi = hal::spi::Spi::new_no_cs_no_miso(
+    let spi = hal::spi::master::Spi::new(
         peripherals.SPI2,
-        sclk,
-        mosi,
         8000u32.kHz(),
         SpiMode::Mode0,
-        &mut system.peripheral_clock_control,
         &mut clocks,
-    );
+    ).with_sck(sclk).with_mosi(mosi);
 
     let spi_interface = SPIInterfaceNoCS::new(spi, dc_pin);
     // Create display driver
@@ -272,30 +264,22 @@ fn main() -> ! {
     )
     .unwrap();
 
-    let executor = EXECUTOR.init(Executor::new());
-    executor.run(|spawner| {
-        spawner.spawn(ui_scene_loop(next_btn, back_btn, window.clone(), ui.clone())).ok();
-        spawner.spawn(ui_update_loop(window, display)).ok();
-        spawner.spawn(adc(peripherals.SENS, adc_pin, ui.clone())).ok();
-        spawner.spawn(clock_ticker(ui)).ok();
-    });
+    _ = spawner.spawn(ui_scene_loop(next_btn, back_btn, window.clone(), ui.clone()));
+    _ = spawner.spawn(ui_update_loop(window, display));
+    _ = spawner.spawn(adc(peripherals.SENS, adc_pin, ui.clone()));
+    _ = spawner.spawn(clock_ticker(ui));
+
+    loop {
+        // Tick...
+        Timer::after(Duration::from_millis(1_000)).await;
+    }
 }
 
 fn init_heap() {
     const HEAP_SIZE: usize = 32 * 2048;
-
-    extern "C" {
-        static mut _heap_start: u32;
-        static mut _heap_end: u32;
-    }
+    static mut HEAP: core::mem::MaybeUninit<[u8; HEAP_SIZE]> = core::mem::MaybeUninit::uninit();
 
     unsafe {
-        let heap_start = &_heap_start as *const _ as usize;
-        let heap_end = &_heap_end as *const _ as usize;
-        assert!(
-            heap_end - heap_start > HEAP_SIZE,
-            "Not enough available heap memory."
-        );
-        ALLOCATOR.init(heap_start as *mut u8, HEAP_SIZE);
+        ALLOCATOR.init(HEAP.as_mut_ptr().cast(), HEAP_SIZE);
     }
 }
