@@ -2,6 +2,8 @@
 #![no_main]
 #![feature(type_alias_impl_trait)]
 
+//Touch
+use cst816s::{self, CST816S};
 //Global allocator
 extern crate alloc;
 //use core::time::Duration;
@@ -13,7 +15,7 @@ use embedded_graphics::{pixelcolor::raw::RawU16, prelude::*, primitives::Rectang
 use embedded_hal::PwmPin;
 use embedded_hal_async::digital::Wait;
 use gc9a01a::GC9A01A;
-use hal::embassy;
+use hal::{embassy};
 use hal::gpio::{Analog, GpioPin, Input, PullUp};
 use hal::peripherals::SENS;
 // Slint ui
@@ -224,6 +226,12 @@ async fn main(spawner: Spawner) {
     let next_btn = io.pins.gpio5.into_pull_up_input();
     let back_btn = io.pins.gpio15.into_pull_up_input();
     let adc_pin = io.pins.gpio35.into_analog();
+
+    //Touch GPIO
+    let touch_int = io.pins.gpio26.into_pull_up_input().degrade();
+    let touch_rst = io.pins.gpio13.into_push_pull_output().degrade();
+    let sda = io.pins.gpio12;
+    let scl = io.pins.gpio25;
     //let accept_btn = io.pins.gpio22.into_pull_up_input();
 
     //Initialize SPI
@@ -234,7 +242,18 @@ async fn main(spawner: Spawner) {
         &mut clocks,
     ).with_sck(sclk).with_mosi(mosi);
 
+    let i2c = hal::i2c::I2C::new(
+        peripherals.I2C0, 
+        sda, 
+        scl, 
+        400u32.kHz(), 
+        &mut clocks
+    );
+
     let spi_interface = SPIInterfaceNoCS::new(spi, dc_pin);
+    // Create touch driver
+    let mut touchpad = CST816S::new(i2c, touch_int, touch_rst);
+    touchpad.setup(&mut delay).unwrap();
     // Create display driver
     let mut display = gc9a01a::GC9A01A::new(spi_interface, rst_pin, Channel);
     // Bring out of reset
@@ -271,7 +290,11 @@ async fn main(spawner: Spawner) {
 
     loop {
         // Tick...
-        Timer::after(Duration::from_millis(1_000)).await;
+        if let Some(evt) = touchpad.read_one_touch_event(true) {
+
+            println!("{:?}",evt);
+        }
+        Timer::after(Duration::from_millis(5)).await;
     }
 }
 
