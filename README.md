@@ -24,7 +24,7 @@ It is intended for the ESP32 MCU on the Xtensa architecture.
 
 ## Hardware
 Currently this project runs on following hardware:
-+ GC9A01 28' LCD Display.
++ GC9A01 LCD Display with CST816S touch chip.
 + ESP-WROOM-32 Development Board.
 
 ## Contribute
