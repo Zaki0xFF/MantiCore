@@ -15,9 +15,7 @@ use embedded_graphics::{pixelcolor::raw::RawU16, prelude::*, primitives::Rectang
 use embedded_hal::PwmPin;
 use embedded_hal_async::digital::Wait;
 use gc9a01a::GC9A01A;
-use hal::embassy;
-use hal::gpio::{Analog, GpioPin, Input, PullUp};
-use hal::peripherals::SENS;
+use hal::peripheral::SENS;
 // Slint ui
 use slint::platform::software_renderer::MinimalSoftwareWindow;
 use slint::platform::{Platform, Key};
@@ -26,13 +24,13 @@ use display_interface_spi::SPIInterfaceNoCS;
 use embassy_executor::Spawner;
 use esp_println::println;
 use hal::{
-    adc::{AdcConfig, Attenuation, ADC},
     clock::ClockControl,
     peripherals::Peripherals,
     prelude::*,
     spi::SpiMode,
     timer::TimerGroup,
-    Delay, Rtc, IO,
+    gpio::{Analog, GpioPin, Input, PullUp},
+    Delay, Rtc, IO, riscv, interrupt, embassy, peripheral
 };
 //Embassy
 use embassy_futures::select::select;
