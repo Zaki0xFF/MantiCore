@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 build = "src/build.rs"
 
 [dependencies]
-hal = { package = "esp-hal", git = "https://github.com/Song-aff/esp-hal-c3", branch = "main", features = ["embassy", "embassy-time-timg0", "async", "embassy-executor-thread", "esp32c3", "embedded-hal"]}
+hal = { package = "esp-hal", git = "https://github.com/Song-aff/esp-hal-c3", branch = "main", features = ["embassy-time-timg0", "embassy-executor-thread", "esp32c3", "embedded-hal"]}
 esp-backtrace = { version = "0.11.1", features = ["esp32c3", "panic-handler", "exception-handler", "println"] }
 esp-println = { version = "0.9.1", features = ["esp32c3"] }
 display-interface-spi = "0.4.1"
@@ -35,3 +35,6 @@ slint-build = "1.5.1"
 [features]
 default = ["embassy-time-timg0"]
 embassy-time-timg0 = []
+
+[profile.release]
+opt-level = 3
