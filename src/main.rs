@@ -15,7 +15,7 @@ use embedded_graphics::{pixelcolor::raw::RawU16, prelude::*, primitives::Rectang
 use embedded_hal::PwmPin;
 use embedded_hal_async::digital::Wait;
 use gc9a01a::GC9A01A;
-use hal::{embassy};
+use hal::embassy;
 use hal::gpio::{Analog, GpioPin, Input, PullUp};
 use hal::peripherals::SENS;
 // Slint ui
