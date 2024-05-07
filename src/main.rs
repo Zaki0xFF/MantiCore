@@ -115,7 +115,7 @@ type RgbDisplay = GC9A01A<
         hal::spi::master::Spi<'static, hal::peripherals::SPI2, hal::spi::FullDuplexMode>,
         GpioPin<hal::gpio::Output<hal::gpio::PushPull>, 16>
     >,
-    GpioPin<hal::gpio::Output<hal::gpio::PushPull>, 4>, Channel>;
+    GpioPin<hal::gpio::Output<hal::gpio::PushPull>, 19>, Channel>;
 
 #[embassy_executor::task]
 async fn ui_update_loop(window: alloc::rc::Rc<MinimalSoftwareWindow>, mut display: RgbDisplay) {
@@ -138,7 +138,7 @@ async fn ui_update_loop(window: alloc::rc::Rc<MinimalSoftwareWindow>, mut displa
 
 #[embassy_executor::task]
 async fn ui_scene_loop(
-    mut next_btn: GpioPin<Input<PullUp>, 5>,
+    mut next_btn: GpioPin<Input<PullUp>, 25>,
     mut back_btn: GpioPin<Input<PullUp>, 15>,
     window: alloc::rc::Rc<MinimalSoftwareWindow>,
     ui: Rc<MainWindow>
@@ -222,16 +222,16 @@ async fn main(spawner: Spawner) {
     let sclk = io.pins.gpio18;
     let mosi = io.pins.gpio23;
     let dc_pin = io.pins.gpio16.into_push_pull_output();
-    let rst_pin = io.pins.gpio4.into_push_pull_output();
-    let next_btn = io.pins.gpio5.into_pull_up_input();
+    let rst_pin = io.pins.gpio19.into_push_pull_output();
+    let next_btn = io.pins.gpio25.into_pull_up_input();
     let back_btn = io.pins.gpio15.into_pull_up_input();
     let adc_pin = io.pins.gpio35.into_analog();
 
     //Touch GPIO
     let touch_int = io.pins.gpio26.into_pull_up_input().degrade();
     let touch_rst = io.pins.gpio13.into_push_pull_output().degrade();
-    let sda = io.pins.gpio12;
-    let scl = io.pins.gpio25;
+    let sda = io.pins.gpio4;
+    let scl = io.pins.gpio5;
     //let accept_btn = io.pins.gpio22.into_pull_up_input();
 
     //Initialize SPI
@@ -242,7 +242,7 @@ async fn main(spawner: Spawner) {
         &mut clocks,
     ).with_sck(sclk).with_mosi(mosi);
 
-    let i2c = hal::i2c::I2C::new(
+    let mut i2c = hal::i2c::I2C::new(
         peripherals.I2C0, 
         sda, 
         scl, 
@@ -252,8 +252,8 @@ async fn main(spawner: Spawner) {
 
     let spi_interface = SPIInterfaceNoCS::new(spi, dc_pin);
     // Create touch driver
-    let mut touchpad = CST816S::new(i2c, touch_int, touch_rst);
-    touchpad.setup(&mut delay).unwrap();
+    // let mut touchpad = CST816S::new(i2c, touch_int, touch_rst);
+    // touchpad.setup(&mut delay).unwrap();
     // Create display driver
     let mut display = gc9a01a::GC9A01A::new(spi_interface, rst_pin, Channel);
     // Bring out of reset
@@ -287,13 +287,20 @@ async fn main(spawner: Spawner) {
     _ = spawner.spawn(ui_update_loop(window, display));
     _ = spawner.spawn(adc(peripherals.SENS, adc_pin, ui.clone()));
     _ = spawner.spawn(clock_ticker(ui));
-
+    let mut version = [0u8; 1];
+    println!("version = {:02x}", version[0]);
+    for addr in 0..=255 {
+        let resulta =i2c.write_read(addr, &[0x75], &mut version);
+        println!("{:02X} = {:?}", addr, resulta);
+        Timer::after(Duration::from_micros(200)).await;
+    }
     loop {
+        
         // Tick...
-        if let Some(evt) = touchpad.read_one_touch_event(true) {
+        // if let Some(evt) = touchpad.read_one_touch_event(true) {
 
-            println!("{:?}",evt);
-        }
+        //     println!("{:?}",evt);
+        // }
         Timer::after(Duration::from_millis(5)).await;
     }
 }
