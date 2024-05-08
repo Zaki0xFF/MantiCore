@@ -3,6 +3,8 @@
 #![feature(type_alias_impl_trait)]
 
 extern crate alloc;
+use core::result;
+
 use embassy_time::{Duration, Timer};
 use esp_backtrace as _;
 use embassy_executor::Spawner;
@@ -32,25 +34,23 @@ async fn main(_spawner: Spawner) {
 
     //Initialize GPIO Pins
     let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
-    let sda = io.pins.gpio4;
-    let scl = io.pins.gpio5;
+    let sda = io.pins.gpio8;
+    let scl = io.pins.gpio9;
 
     let mut i2c = hal::i2c::I2C::new(
         peripherals.I2C0, 
         sda, 
         scl, 
-        400u32.kHz(), 
+        100u32.kHz(), 
         &mut clocks,
         None
     );
 
     let mut version = [0u8; 1];
     println!("version = {:02x}", version[0]);
-    for addr in 0..=255 {
-        let resulta =i2c.write_read(addr, &[0x75], &mut version);
-        println!("{:02X} = {:?}", addr, resulta);
-        Timer::after(Duration::from_micros(200)).await;
-    }
+    let addr = 0x68;
+    let resulta =i2c.write_read(addr, &[0x75], &mut version);
+    println!("{:02X} = {:?}", addr, resulta);
     loop {
         Timer::after(Duration::from_millis(5)).await;
     }
