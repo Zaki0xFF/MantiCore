@@ -2,6 +2,10 @@
 runner = "espflash flash --monitor"
 [build]
 target = "riscv32imc-unknown-none-elf"
+rustflags = [
+    "-C", "link-arg=-Tlinkall.x"
+]
+
 
 [unstable]
 build-std = ["core", "alloc"]
