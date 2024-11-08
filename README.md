@@ -1,34 +1,43 @@
 <h1 align="center">
-MantiCore
+MantiCore - SmartWatch software
 </h1>
 <p align="center">
   <a href="https://github.com/Zaki0xFF/MantiCore/actions/workflows/rust.yml">
-    <img src="https://github.com/Zaki0xFF/MantiCore/actions/workflows/rust.yml/badge.svg">
+	  <img alt="Static Badge" src="https://img.shields.io/badge/Build-passing-brightgreen?style=for-the-badge&labelColor=%232e1000&color=%239c3700">
   </a>
+	  <img src="https://img.shields.io/badge/Slint-1.2.0-brightgreen?style=for-the-badge&labelColor=%232e1000&color=%239c3700">
+	  <img alt="Static Badge" src="https://img.shields.io/badge/License-GPLv3-brightgreen?style=for-the-badge&labelColor=%232e1000&color=%239c3700">
+	  <img alt="Static Badge" src="https://img.shields.io/badge/Size-135KB-brightgreen?style=for-the-badge&labelColor=%232e1000&color=%239c3700">
 </p>
-<p align="center">
-Empowers to run free as in freedom software on easy to access hardware components
-</p>
-<br>
+<div align="center">
+    <a href="#about">About</a>
+    •
+    <a href="#features">Features</a>
+    •
+    <a href="#hardware">Hardware</a>
+    •
+    <a href="#contribute">Contribute</a>
+</div>
 
-## Table of Contents
-- [Description](#description)
-- [Contribute](#contribute)
-- [Hardware](#hardware)
-- [License](#license)
-
-## Description
-MantiCore aims to be small, performant and hackable software that allows you to build your own smart wearable.
-
-It is intended for the ESP32 MCU on the Xtensa architecture.
-
+## About
+MantiCore aims to be small, performant and hackable software that for the ESP32C3 MCU. Using the Slint UI toolkit and Rust programming language.
+## Features
+- [x] **Slint UI Rendering**
+- [x]   **Display**
+- [ ] **Touch**
+- [ ] **Sensors**
+- [ ] **UI Completed**
+- [ ] **Over-the-Air (OTA) Firmware Updates**
+- [ ] **Phone Integration Via Mobile App**
 ## Hardware
-Currently this project runs on following hardware:
-+ GC9A01 LCD Display with CST816S touch chip.
-+ ESP-WROOM-32 Development Board.
+Currently, the project supports the following hardware components:
++ **GC9A01 LCD Display with capacitive touch**.
++ **Accelerometer**.
++ **WiFi & Bluetooth**.
++ **Light sensor**.
++ **Heart rate sensor**.
 
+*In the future, hardware support may extend to include wireless charging capabilities and GPS functionality. Note that PCB schematics will not be open-sourced at this time.*
 ## Contribute
-We are open to all sort of contributions. Before opening pull request familiarize yourself with: https://gist.github.com/joshbuchea/6f47e86d2510bce28f8e7f42ae84c716
-
-## License
-This project is licensed under GPL.
+We welcome contributions of all kinds, from bug fixes and new features to documentation improvements. Before opening pull request familiarize yourself with: 
+ + https://gist.github.com/joshbuchea/6f47e86d2510bce28f8e7f42ae84c716
