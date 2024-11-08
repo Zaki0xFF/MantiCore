@@ -3,7 +3,7 @@ MantiCore - SmartWatch software
 </h1>
 <p align="center">
   <a href="https://github.com/Zaki0xFF/MantiCore/actions/workflows/rust.yml">
-	  <img alt="Static Badge" src="https://img.shields.io/badge/Build-passing-brightgreen?style=for-the-badge&labelColor=%232e1000&color=%239c3700">
+	  <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/Zaki0xFF/MantiCore/rust.yml?style=for-the-badge&labelColor=%232e1000&color=%239c3700">
   </a>
 	  <img src="https://img.shields.io/badge/Slint-1.2.0-brightgreen?style=for-the-badge&labelColor=%232e1000&color=%239c3700">
 	  <img alt="Static Badge" src="https://img.shields.io/badge/License-GPLv3-brightgreen?style=for-the-badge&labelColor=%232e1000&color=%239c3700">
