@@ -36,8 +36,8 @@ Currently, the project supports the following hardware components:
 + **WiFi & Bluetooth**.
 + **Light sensor**.
 + **Heart rate sensor**.
-
-*In the future, hardware support may extend to include wireless charging capabilities and GPS functionality. Note that PCB schematics will not be open-sourced at this time.*
+![Schema](docs/schema.png)
+*In the future, hardware support may extend to include wireless charging capabilities and GPS functionality.*
 ## Contribute
 We welcome contributions of all kinds, from bug fixes and new features to documentation improvements. Before opening pull request familiarize yourself with: 
  + https://gist.github.com/joshbuchea/6f47e86d2510bce28f8e7f42ae84c716
